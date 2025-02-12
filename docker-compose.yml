@@ -41,7 +41,6 @@ services:
         ipv4_address: 172.20.0.3
 
   datanode2:
-    # Similar configuration to datanode1, with different container_name and IP
     image: apache/hadoop:3.4.1
     container_name: datanode2
     hostname: datanode2
