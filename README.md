@@ -1,3 +1,4 @@
+<a name="readme-top"></a>
 # Hadoop Cluster con Docker Compose  
 
 Este repositorio contiene los archivos necesarios para desplegar un clúster de **Hadoop** utilizando **Docker Compose**. La configuración incluye los principales componentes de Hadoop, como **HDFS (Namenode y Datanodes)** y los servicios esenciales para su funcionamiento.  
@@ -48,6 +49,7 @@ docker ps
 ```sh
 docker exec -it namenode bash
 ```
+<p align="right">(<a href="#readme-top">Volver arriba</a>)</p>
 
 ## 📌 Comandos Útiles  
 
@@ -71,6 +73,9 @@ hdfs dfs -get /ruta/origen/archivo.txt .
 hdfs dfsadmin -report
 ```
 
+<p align="right">(<a href="#readme-top">Volver arriba</a>)</p>
+
+
 ## 📝 Notas  
 
 - El sistema está configurado para un entorno de desarrollo, no para producción.  
@@ -80,3 +85,21 @@ hdfs dfsadmin -report
 
 - [Documentación oficial de Hadoop](https://hadoop.apache.org/docs/stable/)  
 - [Docker Hub - Hadoop Images](https://hub.docker.com/)  
+
+<p align="right">(<a href="#readme-top">Volver arriba</a>)</p>
+
+
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[contributors-shield]: https://img.shields.io/github/contributors/josemarialuna/hdfs-docker-cluster.svg?style=for-the-badge
+[contributors-url]: https://github.com/josemarialuna/hdfs-docker-cluster/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/josemarialuna/hdfs-docker-cluster.svg?style=for-the-badge
+[forks-url]: https://github.com/josemarialuna/hdfs-docker-cluster/network/members
+[stars-shield]: https://img.shields.io/github/stars/josemarialuna/hdfs-docker-cluster.svg?style=for-the-badge
+[stars-url]: https://github.com/josemarialuna/hdfs-docker-cluster/stargazers
+[issues-shield]: https://img.shields.io/github/issues/josemarialuna/hdfs-docker-cluster.svg?style=for-the-badge
+[issues-url]: https://github.com/josemarialuna/hdfs-docker-cluster/issues
+[license-shield]: https://img.shields.io/github/license/josemarialuna/hdfs-docker-cluster.svg?style=for-the-badge
+[license-url]: https://github.com/josemarialuna/hdfs-docker-cluster/blob/master/LICENSE.txt
+[personal-shield]: https://img.shields.io/badge/Personal%20Site-555?style=for-the-badge
+[personal-url]: https://josemarialuna.com
