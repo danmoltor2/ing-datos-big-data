@@ -1,4 +1,4 @@
 #!/bin/bash
 echo "Iniciando NodeManager..."
-yarn nodemanager
+yarn --daemon start nodemanager
 tail -f /dev/null

@@ -1,8 +1,3 @@
-#!/bin/bash
-
-# Asegurar que el archivo de configuración existe
-if [ ! -f /opt/hadoop/etc/hadoop/capacity-scheduler.xml ]; then
-    cat <<EOF > /opt/hadoop/etc/hadoop/capacity-scheduler.xml
 <?xml version="1.0"?>
 <configuration>
     <property>
@@ -25,12 +20,4 @@ if [ ! -f /opt/hadoop/etc/hadoop/capacity-scheduler.xml ]; then
         <value>RUNNING</value>
     </property>
 </configuration>
-EOF
-fi
 
-# Iniciar YARN
-yarn --daemon start resourcemanager
-yarn --daemon start nodemanager
-
-# Evitar que el contenedor termine
-tail -f /dev/null
