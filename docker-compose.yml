@@ -103,6 +103,43 @@ services:
         ipv4_address: 172.20.0.6
     ports:
       - "8042:8042"  # Exponemos la interfaz del NodeManager
+  
+  ### Sesión 2 ###
+  hive-metastore:
+    image: apache/hive:4.0.1
+    container_name: hive-metastore
+    hostname: hive-metastore
+    environment:
+      - SERVICE_NAME=metastore
+      - HIVE_METASTORE_URI=thrift://hive-metastore:9083
+    volumes:
+      - ./hive-config:/opt/hive/conf
+    depends_on:
+      - namenode
+    networks:
+      hdfs_network:
+        ipv4_address: 172.20.0.8
+
+  trino:
+    image: trinodb/trino:470
+    container_name: trino
+    hostname: trino
+    user: root
+    environment:
+      - TRINO_CONFIG_DIR=/etc/trino
+    volumes:
+      - ./trino-config:/etc/trino
+      - ./trino-config/catalog:/etc/trino/catalog
+    ports:
+      - "8080:8080"  # Interfaz web de Trino
+    depends_on:
+      - hive-metastore
+      - namenode
+    networks:
+      hdfs_network:
+        ipv4_address: 172.20.0.7
+
+  
 
 networks:
   hdfs_network:
