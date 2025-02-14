@@ -1,4 +1,4 @@
-version: '3'
+version: '3.4.1'
 
 services:
   namenode:
@@ -16,6 +16,10 @@ services:
     ports:
       - "9870:9870"
       - "9000:9000"
+      - '8088:8088'
+      - '18080:18080'
+
+
     command: [ "/bin/bash", "/start-hdfs.sh" ]
     networks:
       hdfs_network:
