@@ -81,6 +81,18 @@ hdfs dfsadmin -report
 - El sistema está configurado para un entorno de desarrollo, no para producción.  
 - Se pueden añadir más **Datanodes** editando el `docker-compose.yml`.  
 
+##  FAQ  
+**El namenode me da un error de unexpected end of file**
+Verifica caracteres ocultos en el fichero. Ejecuta:
+```sh
+cat -A start-hdfs.sh
+```
+Si ves ^M al final de las líneas, el archivo tiene formato Windows y debes convertirlo.
+```sh
+sed -i 's/\r$//' start-hdfs.sh
+```
+
+
 ## 📖 Referencias  
 
 - [Documentación oficial de Hadoop](https://hadoop.apache.org/docs/stable/)  
