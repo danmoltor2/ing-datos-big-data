@@ -1,26 +1,63 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <property>
-        <name>javax.jdo.option.ConnectionURL</name>
-        <value>jdbc:mysql://mysql:3306/metastore?createDatabaseIfNotExist=true</value>
-    </property>
+    <!-- Configuración del Metastore -->
+<property>
+    <name>javax.jdo.option.ConnectionURL</name>
+    <value>jdbc:mysql://mysql:3306/metastore?useSSL=false&amp;allowPublicKeyRetrieval&#61;true</value>
+</property>
+
+
+
     <property>
         <name>javax.jdo.option.ConnectionDriverName</name>
-        <value>com.mysql.jdbc.Driver</value>
+        <value>com.mysql.cj.jdbc.Driver</value>
     </property>
+
+
     <property>
         <name>javax.jdo.option.ConnectionUserName</name>
         <value>hive</value>
     </property>
+
+
     <property>
         <name>javax.jdo.option.ConnectionPassword</name>
-        <value>hive</value>
+        <value>hivepassword</value>
     </property>
+
+    <!-- Configuración del almacén de datos -->
     <property>
-        <name>datanucleus.autoCreateTables</name>
-        <value>true</value>
+        <name>hive.metastore.warehouse.dir</name>
+        <value>/user/hive/warehouse</value>
     </property>
+
     <property>
         <name>hive.metastore.uris</name>
         <value>thrift://hive:9083</value>
     </property>
+
+
+    <!-- Configuración de HDFS -->
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://namenode:9000</value>
+    </property>
+
+<!-- Configuración de HiverServer2 -->
+<property>
+    <name>hive.server2.thrift.bind.host</name>
+    <value>0.0.0.0</value>
+</property>
+
+<property>
+    <name>hive.server2.thrift.port</name>
+    <value>10000</value>
+</property>
+
+<property>
+    <name>hive.server2.authentication</name>
+    <value>NONE</value>
+</property>
+
 </configuration>

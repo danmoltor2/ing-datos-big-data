@@ -106,41 +106,49 @@ services:
   
   ### Sesión 2 ###
   mysql:
-    image: mysql:5.7
+
+    image: mysql:8.0
     container_name: mysql
     hostname: mysql
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: metastore
       MYSQL_USER: hive
-      MYSQL_PASSWORD: hive
+
+      MYSQL_PASSWORD: hivepassword
     volumes:
-      - ./mysql_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "3306:3306"
     networks:
       hdfs_network:
         ipv4_address: 172.20.0.9
 
-
   hive:
-    build: ./hive  # Usamos el Dockerfile personalizado
+    build: ./hive
     container_name: hive
     hostname: hive
     restart: unless-stopped
     user: root
     environment:
       - SERVICE_NAME=metastore
-      - HIVE_METASTORE_DB_TYPE=mysql
+      - HIVE_metastore_TYPE=mysql
+      - HIVE_JDBC_URL=jdbc:mysql://mysql:3306/metastore
+      - HIVE_METASTORE_USER=hive
+      - HIVE_METASTORE_PASSWORD=hivepassword
     volumes:
       - ./hive/conf:/opt/hive/conf
       - ./hive/data:/opt/hive/data
       - ./hive/logs:/opt/hive/logs
-      - ./scripts/init-hive.sh:/docker-entrypoint-initdb.d/init-hive.sh
     entrypoint: ["/bin/bash", "/docker-entrypoint-initdb.d/init-hive.sh"]
     ports:
       - "9083:9083"
+      - "10000:10000"
+
     depends_on:
+      - mysql
       - namenode
       - mysql
     networks:
@@ -178,4 +186,5 @@ networks:
         - subnet: 172.20.0.0/16
 
 volumes:
-  hive_home:
+  mysql_data:  # Asegurar que el volumen está definido aquí
+

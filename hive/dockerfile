@@ -1,10 +1,18 @@
 FROM apache/hive:4.0.1
 
+
+USER root
 # Instala wget y descarga el driver JDBC de MySQL
-RUN apt-get update && apt-get install -y wget && \
-    wget -O /opt/hive/lib/mysql-connector-java.jar https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-8.0.33.jar && \
+RUN apt-get update && \
+    apt-get install -y wget && \
+    wget -O /opt/hive/lib/mysql-connector-java.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.33/mysql-connector-j-8.0.33.jar && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copia los scripts de configuración
+# Copia los archivos de configuración de Hive
 COPY conf /opt/hive/conf
+
+# Copia los scripts de inicialización
+RUN mkdir -p /docker-entrypoint-initdb.d
 COPY scripts/init-hive.sh /docker-entrypoint-initdb.d/init-hive.sh
+RUN chmod +x /docker-entrypoint-initdb.d/init-hive.sh
+
