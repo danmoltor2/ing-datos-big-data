@@ -106,6 +106,7 @@ services:
   
   ### Sesión 2 ###
   mysql:
+
     image: mysql:8.0
     container_name: mysql
     hostname: mysql
@@ -114,6 +115,7 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: metastore
       MYSQL_USER: hive
+
       MYSQL_PASSWORD: hivepassword
     volumes:
       - mysql_data:/var/lib/mysql
@@ -123,6 +125,7 @@ services:
     networks:
       hdfs_network:
         ipv4_address: 172.20.0.9
+
   hive:
     build: ./hive
     container_name: hive
@@ -143,12 +146,16 @@ services:
     ports:
       - "9083:9083"
       - "10000:10000"
+
     depends_on:
       - mysql
       - namenode
+      - mysql
     networks:
       hdfs_network:
         ipv4_address: 172.20.0.8
+
+
 
   trino:
     image: trinodb/trino:470
@@ -177,5 +184,7 @@ networks:
       driver: default
       config:
         - subnet: 172.20.0.0/16
+
 volumes:
   mysql_data:  # Asegurar que el volumen está definido aquí
+
