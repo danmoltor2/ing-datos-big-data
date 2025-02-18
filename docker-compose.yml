@@ -105,16 +105,46 @@ services:
       - "8042:8042"  # Exponemos la interfaz del NodeManager
   
   ### Sesión 2 ###
-  hive-metastore:
-    image: apache/hive:4.0.1
-    container_name: hive-metastore
-    hostname: hive-metastore
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    hostname: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: metastore
+      MYSQL_USER: hive
+      MYSQL_PASSWORD: hivepassword
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3306:3306"
+    networks:
+      hdfs_network:
+        ipv4_address: 172.20.0.9
+  hive:
+    build: ./hive
+    container_name: hive
+    hostname: hive
+    restart: unless-stopped
+    user: root
     environment:
       - SERVICE_NAME=metastore
-      - HIVE_METASTORE_URI=thrift://hive-metastore:9083
+      - HIVE_metastore_TYPE=mysql
+      - HIVE_JDBC_URL=jdbc:mysql://mysql:3306/metastore
+      - HIVE_METASTORE_USER=hive
+      - HIVE_METASTORE_PASSWORD=hivepassword
     volumes:
-      - ./hive-config:/opt/hive/conf
+      - ./hive/conf:/opt/hive/conf
+      - ./hive/data:/opt/hive/data
+      - ./hive/logs:/opt/hive/logs
+    entrypoint: ["/bin/bash", "/docker-entrypoint-initdb.d/init-hive.sh"]
+    ports:
+      - "9083:9083"
+      - "10000:10000"
     depends_on:
+      - mysql
       - namenode
     networks:
       hdfs_network:
@@ -133,7 +163,7 @@ services:
     ports:
       - "8080:8080"  # Interfaz web de Trino
     depends_on:
-      - hive-metastore
+      - hive
       - namenode
     networks:
       hdfs_network:
@@ -147,3 +177,5 @@ networks:
       driver: default
       config:
         - subnet: 172.20.0.0/16
+volumes:
+  mysql_data:  # Asegurar que el volumen está definido aquí
