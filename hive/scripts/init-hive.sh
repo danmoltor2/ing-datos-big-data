@@ -1,18 +1,18 @@
 #!/bin/bash
-echo "Esperando a que MySQL esté listo..."
-sleep 20  # Esperamos para asegurarnos de que MySQL está listo
 
-echo "Iniciando Metastore de Hive..."
-schematool -initSchema -dbType mysql
+# Espera a que MySQL esté listo (usando 'mysql')
+until mysql -h mysql -u root -proot -e "SELECT 1"; do
+  sleep 1
+done
 
-# Iniciar metastore en segundo plano
+# Inicializa el metastore (solo la primera vez o si es necesario)
+/opt/hive/bin/schematool -dbType mysql -initSchema || true # Ignora el error si ya está inicializado
+
+# Inicia el metastore en segundo plano
 hive --service metastore &
 
-# Esperar unos segundos para asegurarse de que el metastore se inicia correctamente
-sleep 5  
-
-# Iniciar HiveServer2 en segundo plano
+# Inicia HiveServer2 en segundo plano
 hive --service hiveserver2 &
 
-# Mantener el contenedor en ejecución
+# Mantén el contenedor en ejecución (crucial)
 tail -f /dev/null

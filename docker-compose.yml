@@ -130,19 +130,25 @@ services:
     restart: unless-stopped
     user: root
     environment:
-      - SERVICE_NAME=metastore
-      - HIVE_metastore_TYPE=mysql
-      - HIVE_JDBC_URL=jdbc:mysql://mysql:3306/metastore
-      - HIVE_METASTORE_USER=hive
-      - HIVE_METASTORE_PASSWORD=hivepassword
+      SERVICE_NAME: metastore  # Importante: Define el servicio como metastore
+      HIVE_METASTORE_TYPE: mysql
+      HIVE_METASTORE_JDBC_URL: jdbc:mysql://mysql:3306/metastore
+      HIVE_METASTORE_USER: hive
+      HIVE_METASTORE_PASSWORD: hivepassword
+      HADOOP_HOME: /opt/hadoop # Añade la variable de entorno HADOOP_HOME
+      HADOOP_CONF_DIR: /opt/hadoop/etc/hadoop # Añade la variable de entorno HADOOP_CONF_DIR
+      HIVE_HOME: /opt/hive #Añade la variable de entorno HIVE_HOME
+      HIVE_CONF_DIR: /opt/hive/conf #Añade la variable de entorno HIVE_CONF_DIR
     volumes:
       - ./hive/conf:/opt/hive/conf
       - ./hive/data:/opt/hive/data
       - ./hive/logs:/opt/hive/logs
+      - ./hadoop_config:/opt/hadoop/etc/hadoop # Monta la configuración de Hadoop
+
     entrypoint: ["/bin/bash", "/docker-entrypoint-initdb.d/init-hive.sh"]
     ports:
-      - "9083:9083"
-      - "10000:10000"
+      - "9083:9083" # Puerto para el Metastore
+      - "10000:10000" # Puerto para HiveServer2
     depends_on:
       - mysql
       - namenode
