@@ -2,6 +2,7 @@ FROM apache/hive:4.0.1
 
 USER root
 RUN hdfs dfs -mkdir -p /user/hive/warehouse
+RUN hdfs dfs -chmod -R 777 /user/hive/warehouse/
 
 # Instala wget y descarga el driver JDBC de MySQL
 RUN apt-get update && \
