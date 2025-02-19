@@ -146,11 +146,9 @@ services:
     ports:
       - "9083:9083"
       - "10000:10000"
-
     depends_on:
       - mysql
       - namenode
-      - mysql
     networks:
       hdfs_network:
         ipv4_address: 172.20.0.8
