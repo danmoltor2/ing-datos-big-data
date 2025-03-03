@@ -73,6 +73,19 @@ hdfs dfs -get /ruta/origen/archivo.txt .
 hdfs dfsadmin -report
 ```
 
+🔹 Salir manualmente del Safe Mode: 
+```sh
+hdfs dfsadmin -safemode leave
+```
+
+🔹 Verificar replicación de bloques y balancear datos:
+```sh
+hdfs fsck /
+hdfs balancer
+```
+
+
+
 <p align="right">(<a href="#readme-top">Volver arriba</a>)</p>
 
 

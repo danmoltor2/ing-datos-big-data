@@ -1,7 +1,7 @@
 services:
   # Nodo Maestro de HDFS
   namenode:
-    image: apache/hadoop:3.4.1
+    build: .
     container_name: namenode
     hostname: namenode
     user: root
@@ -22,7 +22,7 @@ services:
 
   # Nodos de almacenamiento de HDFS
   datanode1:
-    image: apache/hadoop:3.4.1
+    build: .
     container_name: datanode1
     hostname: datanode1
     user: root
@@ -41,7 +41,7 @@ services:
         ipv4_address: 172.20.0.3
 
   datanode2:
-    image: apache/hadoop:3.4.1
+    build: .
     container_name: datanode2
     hostname: datanode2
     user: root
