@@ -1,31 +1,75 @@
 <a name="readme-top"></a>
-# Hadoop Cluster con Docker Compose  
+# Ingeniería de Datos: Big Data
 
-Este repositorio contiene los archivos necesarios para desplegar un clúster de **Hadoop** utilizando **Docker Compose**. La configuración incluye los principales componentes de Hadoop, como **HDFS (Namenode y Datanodes)** y los servicios esenciales para su funcionamiento.  
+Este repositorio contiene los diferentes entornos de desarrollo que se utilizan para la asignatura **Ingeniería de Datos: Big Data** del **Máster en Ingeniería del Software - Cloud, Datos y Gestión TI** de la Escuela Técnica Superior de Ingeniería Informática de la Universidad de Sevilla.
 
 ## 🚀 Características  
 
-- Configuración automatizada de un clúster Hadoop en contenedores.  
-- Implementación de **HDFS** con **Namenode** y dos **Datanodes**.  
-- Uso de **Docker Compose** para una gestión sencilla de los servicios.  
-- Configuración optimizada para pruebas y desarrollo.  
+- 📌 Entorno basado en Docker: Fácil despliegue y configuración de los servicios.
+
+- 📁 Soporte para Hadoop: Ejecución de trabajos de MapReduce con ejemplos prácticos.
+
+- 🔍 Hive y Trino: Consultas SQL sobre datos distribuidos en HDFS.
+
+- 📡 Kafka: Procesamiento en tiempo real con productores y consumidores.
+
+- 🚀 Apache Airflow: Orquestación de flujos de datos con DAGs personalizados.
+
+- 📊 Incluye datasets de prueba: Archivos de texto y CSV para experimentación.
+
+- 🔄 Modularidad: Separación clara de los entornos en sesiones específicas. 
+
 
 ## 📂 Estructura del Repositorio  
 
 ```
-📁 hadoop-cluster-docker
-│── 📄 docker-compose.yml        # Definición de los servicios Hadoop en Docker
-│── 📂 hadoop-config             # Configuraciones de Hadoop (core-site.xml, hdfs-site.xml, etc.)
-│── 📂 scripts                   # Scripts de inicialización y configuración
-│── 📂 src                       # Código de proyectos de las sesiones
-│── 📂 datasets                  # Pues eso, los datos que se usan en los proyectos
-│── 📄 README.md                 # Este documento
+📂 Proyecto
+├── 📂 datasets/                     # Conjunto de datos utilizados en el proyecto
+│   ├── 📂 E0/
+│   ├── 📂 E1/
+│   ├── 📂 E2/
+│   ├── 📄 quijote.txt
+│   ├── 📄 README.txt
+│
+├── 📂 S1-hadoop/                    # Configuración y scripts para Hadoop (Sesión 1)
+│   ├── 📄 docker-compose.yml
+│   ├── 📄 dockerfile
+│   ├── 📂 hadoop_config/
+│   ├── 📂 scripts/
+│   ├── 📂 src/MapReduce/
+│
+├── 📂 S2-Hive y Trino/              # Configuración de Hive y Trino (Sesión 2)
+│   ├── 📄 docker-compose.yml
+│   ├── 📄 dockerfile
+│   ├── 📂 hadoop_config/
+│   ├── 📂 hive/
+│   ├── 📂 trino-config/
+│   ├── 📂 scripts/
+│   ├── 📂 src/MapReduce/
+│
+├── 📂 S3-Kafka/                     # Configuración de Kafka y productores/consumidores (Sesión 3)
+│   ├── 📄 docker-compose.yml
+│   ├── 📄 dockerfile
+│   ├── 📂 hadoop_config/
+│   ├── 📂 scripts/
+│   ├── 📂 src/prod-cons/
+│
+├── 📂 S4-Airflow/                   # Configuración de Apache Airflow (Sesión 4)
+│   ├── 📄 docker-compose.yml
+│   ├── 📄 Dockerfile.airflow
+│   ├── 📂 hadoop_config/
+│   ├── 📂 scripts/
+│   ├── 📂 src/
+│
+├── 📄 .gitignore                    # Archivos y carpetas ignorados por Git
+├── 📄 README.md                      # Documentación del repositorio
 ```
 
 ## 🛠️ Requisitos  
 
 - **Docker** y **Docker Compose** instalados en el sistema.  
-- Al menos **4 GB de RAM** para ejecutar múltiples contenedores.  
+- **RAM**: Mínimo 8GB (recomendado 16GB+ para entornos completos).
+- **Espacio en disco**: Al menos 20GB libres para contenedores y datos.
 
 ## ⚡ Instalación y Uso  
 
