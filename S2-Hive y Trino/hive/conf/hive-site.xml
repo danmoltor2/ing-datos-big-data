@@ -64,7 +64,7 @@
     <!-- Configuración del motor de ejecución en local -->
     <property>
         <name>hive.execution.engine</name>
-        <value>tez</value>
+        <value>mr</value>
     </property>
 
     <!-- Configuración del puerto de HiveServer2 -->
