@@ -60,6 +60,7 @@ services:
   # HiveServer2
   hiveserver2:
     image: apache/hive:4.0.1
+    restart: unless-stopped
     depends_on:
       - metastore
     container_name: hiveserver2
@@ -82,7 +83,8 @@ services:
 
   # Trino
   trino:
-    image: trinodb/trino:latest
+    image: trinodb/trino:472
+    restart: unless-stopped
     container_name: trino
     hostname: trino
     user: root
@@ -90,6 +92,7 @@ services:
       - TRINO_CONFIG_DIR=/etc/trino
     volumes:
       - ./trino/conf:/etc/trino
+      - ./hive/warehouse:/opt/hive/warehouse  # <-- MONTA EL ALMACENAMIENTO LOCAL DE HIVE
     depends_on:
       - hiveserver2
     ports:
