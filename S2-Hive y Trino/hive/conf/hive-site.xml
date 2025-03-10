@@ -54,7 +54,7 @@
     <!-- Configuración para ejecutar en local (sin HDFS) -->
     <property>
         <name>hive.metastore.warehouse.dir</name>
-        <value>file:///opt/hive/warehouse</value>
+        <value>file:///opt/hive/data/warehouse</value>
     </property>
     <property>
         <name>fs.defaultFS</name>
@@ -64,7 +64,7 @@
     <!-- Configuración del motor de ejecución en local -->
     <property>
         <name>hive.execution.engine</name>
-        <value>mr</value>
+        <value>tez</value>
     </property>
 
     <!-- Configuración del puerto de HiveServer2 -->
