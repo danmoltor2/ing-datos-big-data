@@ -1,46 +1,89 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
+    <!-- Configuración general del servidor Hive -->
     <property>
-        <name>javax.jdo.option.ConnectionURL</name>
-        <value>jdbc:mysql://mysql:3306/metastore?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC</value>  </property>
-
+        <name>hive.server2.enable.doAs</name>
+        <value>false</value>
+    </property>
     <property>
-        <name>javax.jdo.option.ConnectionDriverName</name>
-        <value>com.mysql.cj.jdbc.Driver</value>
+        <name>hive.exec.scratchdir</name>
+        <value>/opt/hive/scratch_dir</value>
+    </property>
+    <property>
+        <name>hive.user.install.directory</name>
+        <value>/opt/hive/install_dir</value>
+    </property>
+    <property>
+        <name>hive.exec.submit.local.task.via.child</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>hive.compactor.worker.threads</name>
+        <value>1</value>
     </property>
 
+    <!-- Configuración del metastore de Hive con PostgreSQL -->
+    <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:postgresql://postgres:5432/metastore_db</value>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>org.postgresql.Driver</value>
+    </property>
     <property>
         <name>javax.jdo.option.ConnectionUserName</name>
         <value>hive</value>
     </property>
-
     <property>
         <name>javax.jdo.option.ConnectionPassword</name>
-        <value>hivepassword</value>
+        <value>password</value>
+    </property>
+    <property>
+        <name>hive.metastore.uris</name>
+        <value>thrift://metastore:9083</value>
     </property>
 
+    <!-- Configuración para usar HDFS -->
     <property>
-        <name>hive.metastore.schema.verification</name>
+        <name>hive.metastore.warehouse.dir</name>
+        <value>hdfs://namenode:9000/user/hive/warehouse</value>
+    </property>
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://namenode:9000</value>
+    </property>
+
+    <!-- Configuración del metastore -->
+    <property>
+        <name>metastore.metastore.event.db.notification.api.auth</name>
         <value>false</value>
     </property>
 
+    <!-- Configuración para ejecutar en MapReduce -->
     <property>
-        <name>hive.metastore.warehouse.dir</name>
-        <value>/user/hive/warehouse</value>  </property>
-
+        <name>hive.execution.engine</name>
+        <value>mr</value>
+    </property>
     <property>
-        <name>hive.metastore.uris</name>
-        <value>thrift://hive:9083</value>  </property>
-
+        <name>mapreduce.framework.name</name>
+        <value>yarn</value>
+    </property>
     <property>
-        <name>fs.defaultFS</name>
-        <value>hdfs://namenode:9000</value>  </property>
-
+        <name>mapred.job.tracker</name>
+        <value>resourcemanager:8032</value>
+    </property>
     <property>
-        <name>hive.server2.thrift.bind.host</name>
-        <value>0.0.0.0</value>  </property>
+        <name>yarn.resourcemanager.address</name>
+        <value>resourcemanager:8032</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.scheduler.address</name>
+        <value>resourcemanager:8030</value>
+    </property>
 
+    <!-- Configuración del puerto de HiveServer2 -->
     <property>
         <name>hive.server2.thrift.port</name>
         <value>10000</value>
@@ -48,6 +91,8 @@
 
     <property>
         <name>hive.server2.authentication</name>
-        <value>NONE</value>  </property>
+        <value>NONE</value>
+    </property>
+
 
 </configuration>
