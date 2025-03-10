@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <!-- Configuración general del servidor Hive -->
+    <!-- Configuración general -->
     <property>
         <name>hive.server2.enable.doAs</name>
         <value>false</value>
@@ -23,14 +23,14 @@
         <value>1</value>
     </property>
 
-    <!-- Configuración del metastore de Hive con PostgreSQL -->
+    <!-- Configuración del metastore con MySQL -->
     <property>
         <name>javax.jdo.option.ConnectionURL</name>
-        <value>jdbc:postgresql://postgres:5432/metastore_db</value>
+        <value>jdbc:mysql://mysql:3306/metastore?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC</value> 
     </property>
     <property>
         <name>javax.jdo.option.ConnectionDriverName</name>
-        <value>org.postgresql.Driver</value>
+        <value>com.mysql.cj.jdbc.Driver</value>
     </property>
     <property>
         <name>javax.jdo.option.ConnectionUserName</name>
@@ -45,42 +45,26 @@
         <value>thrift://metastore:9083</value>
     </property>
 
-    <!-- Configuración para usar HDFS -->
-    <property>
-        <name>hive.metastore.warehouse.dir</name>
-        <value>hdfs://namenode:9000/user/hive/warehouse</value>
-    </property>
-    <property>
-        <name>fs.defaultFS</name>
-        <value>hdfs://namenode:9000</value>
-    </property>
-
     <!-- Configuración del metastore -->
     <property>
         <name>metastore.metastore.event.db.notification.api.auth</name>
         <value>false</value>
     </property>
 
-    <!-- Configuración para ejecutar en MapReduce -->
+    <!-- Configuración para ejecutar en local (sin HDFS) -->
+    <property>
+        <name>hive.metastore.warehouse.dir</name>
+        <value>file:///opt/hive/warehouse</value>
+    </property>
+    <property>
+        <name>fs.defaultFS</name>
+        <value>file:///</value>
+    </property>
+
+    <!-- Configuración del motor de ejecución en local -->
     <property>
         <name>hive.execution.engine</name>
         <value>mr</value>
-    </property>
-    <property>
-        <name>mapreduce.framework.name</name>
-        <value>yarn</value>
-    </property>
-    <property>
-        <name>mapred.job.tracker</name>
-        <value>resourcemanager:8032</value>
-    </property>
-    <property>
-        <name>yarn.resourcemanager.address</name>
-        <value>resourcemanager:8032</value>
-    </property>
-    <property>
-        <name>yarn.resourcemanager.scheduler.address</name>
-        <value>resourcemanager:8030</value>
     </property>
 
     <!-- Configuración del puerto de HiveServer2 -->
@@ -88,11 +72,9 @@
         <name>hive.server2.thrift.port</name>
         <value>10000</value>
     </property>
-
     <property>
         <name>hive.server2.authentication</name>
         <value>NONE</value>
     </property>
-
 
 </configuration>
