@@ -1,0 +1,156 @@
+1. Listar los primeros 10 registros de cada tabla
+SELECT * FROM entrega1.info_household LIMIT 10;
+SELECT * FROM entrega1.halfhourly LIMIT 10;
+
+
+2. Contar cuántos hogares están en cada categoría socioeconómica (Acorn)
+SELECT acorn, COUNT(*) AS cantidad_hogares
+FROM entrega1.info_household
+GROUP BY acorn
+ORDER BY cantidad_hogares DESC;
+
+
+3. Mostrar los primeros 10 hogares con más registros de consumo
+SELECT lclid, COUNT(*) AS total_registros
+FROM entrega1.halfhourly
+GROUP BY lclid
+ORDER BY total_registros DESC
+LIMIT 10;
+
+
+4. Consumo total de energía por hogar
+SELECT lclid, SUM(energy) AS consumo_total
+FROM entrega1.halfhourly
+WHERE energy IS NOT NULL
+GROUP BY lclid
+ORDER BY consumo_total DESC
+LIMIT 10;
+
+
+5. Promedio de consumo por tipo de tarifa (Estándar o Time-of-Use)
+WITH consumo_diario AS (
+    SELECT 
+        ih.stdortou,
+        hh.lclid,
+        DATE(hh.tstp) AS fecha,
+        SUM(hh.energy) AS consumo_diario
+    FROM entrega1.halfhourly hh
+    JOIN entrega1.info_household ih ON hh.lclid = ih.lclid
+    WHERE hh.energy IS NOT NULL
+    GROUP BY 
+        ih.stdortou, 
+        hh.lclid, 
+        DATE(hh.tstp)
+)
+SELECT 
+    stdortou, 
+    ROUND(AVG(consumo_diario), 4) AS consumo_medio_diario
+FROM consumo_diario
+GROUP BY stdortou;
+
+
+6. Hogares con consumo mayor a 5 kWh en al menos una medición
+SELECT DISTINCT lclid
+FROM entrega1.halfhourly
+WHERE energy IS NOT NULL AND energy > 5 
+LIMIT 10;
+
+
+7. Consumo medio de energía por categoría Acorn
+SELECT ih.acorn, AVG(hh.energy) AS consumo_medio
+FROM entrega1.info_household ih
+JOIN entrega1.halfhourly hh ON ih.lclid = hh.lclid
+WHERE ih.acorn IS NOT NULL AND hh.energy IS NOT NULL
+GROUP BY ih.acorn
+ORDER BY consumo_medio DESC;
+
+
+8. Comparar el consumo de hogares con diferentes tipos de tarifa
+WITH consumo_diario AS (
+    SELECT 
+        ih.stdortou,
+        hh.lclid,
+        DATE(hh.tstp) AS fecha,
+        SUM(hh.energy) AS consumo_diario
+    FROM entrega1.halfhourly hh
+    JOIN entrega1.info_household ih ON hh.lclid = ih.lclid
+    WHERE hh.energy IS NOT NULL
+    GROUP BY ih.stdortou, hh.lclid, DATE(hh.tstp)
+)
+SELECT 
+    stdortou, 
+    SUM(consumo_diario) AS consumo_total, 
+    AVG(consumo_diario) AS consumo_medio_diario
+FROM consumo_diario
+GROUP BY stdortou;
+
+
+9. Detectar hogares con consumo inconsistente (por debajo de 0.1 kWh durante más de 3 días seguidos)
+WITH consumo_diario AS (
+    SELECT 
+        lclid, 
+        DATE(tstp) AS fecha, 
+        SUM(energy) AS consumo_diario
+    FROM entrega1.halfhourly
+    WHERE energy IS NOT NULL
+    GROUP BY lclid, DATE(tstp)
+),
+consecutivos AS (
+    SELECT 
+        lclid, 
+        fecha, 
+        consumo_diario,
+        LAG(consumo_diario, 1) OVER (PARTITION BY lclid ORDER BY fecha) AS dia_anterior,
+        LAG(consumo_diario, 2) OVER (PARTITION BY lclid ORDER BY fecha) AS dos_dias_atras
+    FROM consumo_diario
+)
+SELECT DISTINCT lclid
+FROM consecutivos
+WHERE consumo_diario < 0.1 
+    AND dia_anterior < 0.1 
+    AND dos_dias_atras < 0.1
+LIMIT 10;
+
+
+10. Consumo total de energía por franja horaria (mañana, tarde, noche)
+SELECT 
+    franja_horaria,
+    SUM(energy) AS consumo_total
+FROM (
+    SELECT 
+        CASE 
+            WHEN HOUR(tstp) BETWEEN 6 AND 12 THEN 'Mañana'
+            WHEN HOUR(tstp) BETWEEN 13 AND 19 THEN 'Tarde'
+            ELSE 'Noche'
+        END AS franja_horaria,
+        energy
+    FROM entrega1.halfhourly
+    WHERE tstp IS NOT NULL
+) AS subquery
+GROUP BY franja_horaria
+ORDER BY consumo_total DESC;
+
+
+11. Final Boss (opcional): ¿Cuánto cambia el consumo medio entre días laborables y fines de semana?
+WITH consumo_diario AS (
+    SELECT 
+        lclid,
+        CASE 
+            WHEN DAYOFWEEK(tstp) IN (1, 7) THEN 'Fin de Semana'
+            ELSE 'Día Laborable'
+        END AS tipo_dia,
+        SUM(energy) AS consumo_diario
+    FROM entrega1.halfhourly
+    WHERE energy IS NOT NULL
+    GROUP BY lclid, 
+        CASE 
+            WHEN DAYOFWEEK(tstp) IN (1, 7) THEN 'Fin de Semana'
+            ELSE 'Día Laborable'
+        END
+)
+SELECT 
+    tipo_dia, 
+    ROUND(AVG(consumo_diario), 4) AS consumo_medio,
+    COUNT(DISTINCT lclid) AS hogares_contabilizados
+FROM consumo_diario
+GROUP BY tipo_dia;
