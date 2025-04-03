@@ -23,4 +23,5 @@ RUN pip install --no-cache-dir apache-airflow-providers-apache-hdfs
 RUN pip install --no-cache-dir apache-airflow-providers-apache-hive
 RUN pip install --no-cache-dir apache-airflow-providers-apache-kafka
 
-
+# Agregamos kafka-python para el consumidor de Kafka
+RUN pip install --no-cache-dir kafka-python

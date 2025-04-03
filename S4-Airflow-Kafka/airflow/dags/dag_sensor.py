@@ -14,6 +14,7 @@ from airflow.models import Variable
 import logging
 from hdfs import InsecureClient
 import time
+from kafka import KafkaConsumer
 from airflow.providers.http.sensors.http import HttpSensor
 from airflow.providers.http.operators.http import SimpleHttpOperator
 import requests
@@ -44,8 +45,7 @@ dag = DAG(
 # Definimos rutas y variables
 csv_file_path = "/opt/airflow/datasets/home_temperature_and_humidity_smoothed_filled.csv"
 parquet_file_path = "/opt/airflow/datasets/home_temperature_and_humidity_smoothed_filled.parquet"
-kafka_topic = "sensores"
-hdfs_output_path = "/user/hive/warehouse/sensores"
+hdfs_path = "/topics/sensores/partition=0"
 
 def convert_csv_to_parquet():
     try:
@@ -56,7 +56,9 @@ def convert_csv_to_parquet():
         
         # Realizamos conversiones de tipos de datos para tstp a datetime
         if 'tstp' in df.columns:
-            df['tstp'] = pd.to_datetime(df['tstp'], errors='coerce')
+            df['tstp'] = pd.to_datetime(df['tstp'])
+            # Convertimos timestamp a formato string ISO
+            df['tstp'] = df['tstp'].dt.strftime('%Y-%m-%d %H:%M:%S')
         
         # Aseguramos que las columnas numéricas sean float
         numeric_columns = [col for col in df.columns if col != 'tstp']
@@ -92,12 +94,14 @@ def generate_kafka_messages():
         # Usamos un identificador como clave y el registro como valor
         messages.append((f"sensor_record_{i}", json.dumps(record)))
     
+    logger.info(f"Se han generado {len(messages)} mensajes desde el archivo Parquet")
+
     return messages
 
 # Tarea para enviar datos a Kafka usando el operador integrado de Airflow
 parquet_to_kafka_task = ProduceToTopicOperator(
     task_id='parquet_to_kafka',
-    topic=kafka_topic,
+    topic="sensores",
     kafka_config_id="kafka_default",
     producer_function=generate_kafka_messages,
     dag=dag,
@@ -105,14 +109,23 @@ parquet_to_kafka_task = ProduceToTopicOperator(
 
 
 # Función para verificar que los mensajes se enviaron correctamente
-def check_kafka_messages(**context):
-    messages = context["task_instance"].xcom_pull(task_ids="parquet_to_kafka")
-    count = len(messages) if messages else 0
-    logger.info(f"Se han enviado {count} mensajes a Kafka")
+def verify_kafka_messages():
+    consumer = KafkaConsumer(
+        'sensores',
+        bootstrap_servers = 'kafka:9092',
+        auto_offset_reset='earliest',
+        enable_auto_commit=True,
+        group_id='test_group',
+        consumer_timeout_ms=5000
+    )
+
+    count = sum(1 for _ in consumer)
+    logger.info(f"Se han consumido {count} mensajes desde Kafka")
+    return count
 
 check_messages_task = PythonOperator(
     task_id='check_kafka_messages',
-    python_callable=check_kafka_messages,
+    python_callable=verify_kafka_messages,
     provide_context=True,
     dag=dag
 )
@@ -137,7 +150,7 @@ create_sink_task = BashOperator(
         "timezone": "UTC", 
         "value.converter.schemas.enable": "false" 
     }
-    }' http://kafka-connect:8083/connector
+    }' http://kafka-connect:8083/connectors
     ''',
     dag=dag
 )
@@ -147,21 +160,23 @@ def check_hdfs_data(**context):
     try:
         # Usamos el WebHDFSHook para interactuar con HDFS
         hdfs_hook = WebHDFSHook(webhdfs_conn_id='hdfs_default')
-        
-        # Listamos archivos en el directorio
-        file_list = hdfs_hook.list_files(hdfs_output_path)
-        
-        # Filtramos los archivos
-        data_files = [f for f in file_list if not f.startswith('.') and not f.startswith('_')] # De esta manera evitamos archivos temporales o ocultos
-        
-        if data_files:
-            return True
-        
-        return False
-            
+        hdfs_client = hdfs_hook.get_conn()  # Obtiene la conexión a HDFS
+
+        # Listamos archivos en el directorio con detalles
+        file_status = hdfs_client.list(hdfs_path, status=True)  # Devuelve nombre y metadatos
+
+        # Extraemos los nombres de los archivos
+        file_list = [file[0] for file in file_status]
+
+        # Filtramos los archivos ocultos o temporales
+        data_files = [f for f in file_list if not f.startswith('.') and not f.startswith('_')]
+
+        logger.info(f"Número de archivos en HDFS: {len(data_files)}")
+
+        return bool(data_files)
+
     except Exception as e:
         logger.warning(f"Error al verificar HDFS: {e}")
-        # Registramos la excepción pero no la propagamos para permitir reintento
         return False
 
 # Tarea para verificar si los datos han sido escritos en HDFS
@@ -197,7 +212,7 @@ def create_hive_table():
         )
         ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe'
         STORED AS TEXTFILE
-        LOCATION '{hdfs_output_path}'
+        LOCATION 'hdfs://namenode:9000{hdfs_path}'
         """)
         cursor.close()
         conn.close()
@@ -228,6 +243,11 @@ def query_temp_by_location():
             FROM sensores
             GROUP BY DATE(tstp)
         """)
+        
+        results = cursor.fetchall()
+        print("Resultado de la consulta:")
+        print("\n".join(map(str, results)))
+        
         cursor.close()
         conn.close()
     except Exception as e:
@@ -249,9 +269,14 @@ def query_worst_air_quality():
         cursor.execute("""
             SELECT tstp, air_salon, air_chambre, air_bureau, air_exterieur
             FROM sensores
-            ORDER BY GREATEST(air_salon, air_chambre, air_bureau, air_exterieur) DESC
+            ORDER BY GREATEST(COALESCE(air_salon, 0), COALESCE(air_chambre, 0), COALESCE(air_bureau, 0), COALESCE(air_exterieur, 0)) DESC
             LIMIT 10
         """)
+        
+        results = cursor.fetchall()
+        print("Resultado de la consulta:")
+        print("\n".join(map(str, results)))
+        
         cursor.close()
         conn.close()
     except Exception as e:
@@ -271,28 +296,39 @@ def query_humidity_variation():
         conn = hive_hook.get_conn()
         cursor = conn.cursor()
         cursor.execute("""
-           WITH humedad_variaciones AS (
-                SELECT tstp, location, humidity,
-                    LAG(humidity) OVER (PARTITION BY location ORDER BY tstp) AS prev_humidity,
-                    LAG(tstp) OVER (PARTITION BY location ORDER BY tstp) AS prev_tstp
-                FROM (
-                    SELECT tstp, 'salon' AS location, humidity_salon AS humidity FROM sensores
-                    UNION ALL
-                    SELECT tstp, 'chambre' AS location, humidity_chambre FROM sensores
-                    UNION ALL
-                    SELECT tstp, 'bureau' AS location, humidity_bureau FROM sensores
-                    UNION ALL
-                    SELECT tstp, 'exterieur' AS location, humidity_exterieur FROM sensores
-                ) t
+           WITH humidity_prev AS (
+                SELECT tstp, humidity_salon, humidity_chambre, humidity_bureau, humidity_exterieur,
+                    LAG(humidity_salon, 4) OVER (ORDER BY tstp) AS prev_humidity_salon,
+                    LAG(humidity_chambre, 4) OVER (ORDER BY tstp) AS prev_humidity_chambre,
+                    LAG(humidity_bureau, 4) OVER (ORDER BY tstp) AS prev_humidity_bureau,
+                    LAG(humidity_exterieur, 4) OVER (ORDER BY tstp) AS prev_humidity_exterieur
+                FROM sensores
+            ),
+
+            humidity_changes AS (
+                SELECT tstp, humidity_salon, prev_humidity_salon, humidity_chambre, prev_humidity_chambre,
+                    humidity_bureau, prev_humidity_bureau,humidity_exterieur, prev_humidity_exterieur,
+                    ABS((humidity_salon - prev_humidity_salon) / NULLIF(prev_humidity_salon, 0)) AS change_salon,
+                    ABS((humidity_chambre - prev_humidity_chambre) / NULLIF(prev_humidity_chambre, 0)) AS change_chambre,
+                    ABS((humidity_bureau - prev_humidity_bureau) / NULLIF(prev_humidity_bureau, 0)) AS change_bureau,
+                    ABS((humidity_exterieur - prev_humidity_exterieur) / NULLIF(prev_humidity_exterieur, 0)) AS change_exterieur
+                FROM humidity_prev
             )
-            SELECT tstp, location, humidity, prev_humidity, ABS(humidity - prev_humidity) AS diff
-            FROM (
-                SELECT *, (unix_timestamp(tstp) - unix_timestamp(COALESCE(prev_tstp, tstp))) / 60.0 AS minutes_diff
-                FROM humedad_variaciones
-            ) t
-            WHERE ABS(humidity - prev_humidity) > 10
-            AND minutes_diff <= 60
+
+            SELECT tstp, change_salon, change_chambre, change_bureau,  change_exterieur
+            FROM humidity_changes
+            WHERE 
+                change_salon > 0.1
+                OR change_chambre > 0.1
+                OR change_bureau > 0.1
+                OR change_exterieur > 0.1
+            ORDER BY tstp
         """)
+        
+        results = cursor.fetchall()
+        print("Resultado de la consulta:")
+        print("\n".join(map(str, results)))
+        
         cursor.close()
         conn.close()
     except Exception as e:
